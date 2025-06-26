@@ -25,7 +25,7 @@
 ### 2. インストールと設定
 1.  このリポジトリを任意のディレクトリにクローンします。
     ```bash
-    git clone [https://github.com/your-username/hotpepper-restaurant-search-app.git](https://github.com/your-username/hotpepper-restaurant-search-app.git)
+    git clone [https://github.com/mizudokei/hotpepper-restaurant-search-app.git](https://github.com/mizudokei/hotpepper-restaurant-search-app.git)
     cd hotpepper-restaurant-search-app
     ```
 
@@ -47,7 +47,7 @@
 
 4.  プロジェクトのルートディレクトリに`.env`ファイルを作成し、ご自身のAPIキーを記述します。
     ```
-    API_KEY="ここにあなたのAPIキーを貼り付け"
+    API_KEY="あなたのAPIキー"
     ```
 
 ### 3. アプリケーションの起動
