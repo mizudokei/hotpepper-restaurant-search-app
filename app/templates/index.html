@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>レストラン検索</title>
-    </head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 <body>
     <h1>レストラン検索</h1>
-    <form action="/search" method="get">
+    <form id="search-form" action="/search" method="get">
         <div>
             <label for="range">検索半径:</label>
             <select name="range" id="range">
@@ -20,7 +21,11 @@
         </div>
         <br>
         <button type="button" id="search-btn">現在地で検索</button>
+
+        <input type="hidden" name="lat" id="lat">
+        <input type="hidden" name="lng" id="lng">
     </form>
 
-    </body>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
 </html>
