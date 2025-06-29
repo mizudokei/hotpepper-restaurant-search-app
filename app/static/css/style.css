@@ -55,3 +55,31 @@ body {
     font-size: 0.9em;
     color: #555;
 }
+
+.shop-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.detail-image {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.detail-table th, .detail-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.detail-table th {
+    background-color: #f2f2f2;
+    width: 100px;
+}
