@@ -31,5 +31,22 @@
             {% endif %}
         </div>
     </div>
+    <div class="paging">
+        {% if page > 1 %}
+            <a href="{{ url_for('main.search', page=page-1, lat=lat, lng=lng, range=search_range) }}">&laquo; 前へ</a>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+                <span class="current">{{ p }}</span>
+            {% else %}
+                <a href="{{ url_for('main.search', page=p, lat=lat, lng=lng, range=search_range) }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('main.search', page=page+1, lat=lat, lng=lng, range=search_range) }}">&raquo; 次へ</a>
+        {% endif %}
+    </div>
 </body>
 </html>

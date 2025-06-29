@@ -83,3 +83,28 @@ body {
     background-color: #f2f2f2;
     width: 100px;
 }
+
+.paging {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.paging a, .paging span {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.paging a:hover {
+    background-color: #f2f2f2;
+}
+
+.paging .current {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}

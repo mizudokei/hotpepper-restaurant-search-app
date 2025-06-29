@@ -11,12 +11,17 @@ def index():
 
 @bp.route('/search')
 def search():
-    # フロントエンドから送られてきたパラメータを取得
-    lat = request.args.get('lat') # 緯度
-    lng = request.args.get('lng') # 経度
-    range_code = request.args.get('range') # 検索範囲コード
+    
+    page = request.args.get('page', 1, type=int)
+    
+    count = 10 
+    
+    start = (page - 1) * count + 1
 
-    # APIへのリクエスト情報を作成
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+    range_code = request.args.get('range')
+
     api_key = current_app.config['API_KEY']
     api_url = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/'
 
@@ -26,27 +31,37 @@ def search():
         'lng': lng,
         'range': range_code,
         'order': 4,
+        'start': start,   
+        'count': count,   
         'format': 'json'
     }
 
-    # APIにリクエストを送信し、レスポンスを取得
     response = requests.get(api_url, params=params)
-    response.raise_for_status()  # エラーがあれば例外を発生させる
-
-    # レスポンスのJSONをPythonの辞書型に変換
+    response.raise_for_status()
     search_result = response.json()
 
-    # APIレスポンスから店舗情報のリストを取得する
-    # .get('shop', [])とすることで、'shop'キーが存在しなくてもエラーにならず、空のリストを返す
     shops = search_result['results'].get('shop', [])
+    
+    
+    total_results = int(search_result['results'].get('results_available', 0))
+    
+    total_pages = (total_results + count - 1) // count
 
-    # 取得した店舗リストを`results.html`に渡して、ページを生成して返す
-    return render_template('results.html', shops=shops)
+
+    return render_template(
+        'results.html',
+        shops=shops,
+        page=page,
+        total_pages=total_pages,
+        lat=lat,
+        lng=lng,
+        search_range=range_code
+    )
 
 @bp.route('/shop/<string:shop_id>')
 def shop_detail(shop_id):
 
-    # APIへのリクエスト情報を作成
+    
     api_key = current_app.config['API_KEY']
     api_url = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/'
 
@@ -56,12 +71,12 @@ def shop_detail(shop_id):
         'format': 'json'
     }
 
-    # APIにリクエストを送信し、レスポンスを取得
+    
     response = requests.get(api_url, params=params)
     response.raise_for_status()
     result = response.json()
 
-    # 店舗情報が取得できればその情報を、できなければNoneをshop変数に格納
+    
     shop = result['results']['shop'][0] if result['results']['shop'] else None
 
     return render_template('detail.html', shop=shop)
