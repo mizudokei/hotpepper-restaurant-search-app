@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rangeSelect = document.getElementById('range');
     const resultsContainer = document.getElementById('search-results-container');
     const paginationContainer = document.getElementById('pagination-container');
+    const keywordInput = document.getElementById('keyword');
+    const loadingSpinner = document.getElementById('loading-spinner');
     
     // 緯度・経度をJavaScript内で保持するための隠しフィールド
     const latInput = document.getElementById('lat');
@@ -46,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ローディング表示
-        resultsContainer.innerHTML = '<p>検索中...</p>';
+        loadingSpinner.classList.remove('hidden'); // スピナー表示
+        resultsContainer.innerHTML = '';
         paginationContainer.innerHTML = '';
 
         // APIに渡すクエリパラメータを組み立て
@@ -56,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
             range: rangeSelect.value,
             page: page
         });
+        if (keywordInput.value) {
+            params.append('keyword', keywordInput.value);
+        }
 
         try {
             // 自作のバックエンドAPIをFetch APIで呼び出す
@@ -70,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('検索に失敗しました:', error);
             resultsContainer.innerHTML = '<p>検索に失敗しました。もう一度お試しください。</p>';
+        } finally {
+            // ローディング非表示
+            loadingSpinner.classList.add('hidden');
         }
     }
 

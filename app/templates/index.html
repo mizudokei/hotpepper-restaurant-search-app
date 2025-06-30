@@ -8,8 +8,7 @@
 </head>
 <body>
     <h1>レストラン検索</h1>
-    <form id="search-form" action="/search" method="get">
-        <div>
+    <form id="search-form" onsubmit="return false;"> <div>
             <label for="range">検索半径:</label>
             <select name="range" id="range">
                 <option value="1">300m</option>
@@ -19,12 +18,18 @@
                 <option value="5">3000m</option>
             </select>
         </div>
+        <div>
+            <label for="keyword">キーワード:</label>
+            <input type="text" id="keyword" name="keyword" placeholder="例：ラーメン、個室">
+        </div>
         <br>
         <button type="button" id="search-btn">現在地で検索</button>
-
         <input type="hidden" name="lat" id="lat">
         <input type="hidden" name="lng" id="lng">
     </form>
+
+    <div id="loading-spinner" class="hidden">
+    </div>
 
     <div id="search-results-container">
     </div>

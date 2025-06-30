@@ -16,6 +16,7 @@ def api_search():
         lat = request.args.get('lat', type=float)
         lng = request.args.get('lng', type=float)
         range_code = request.args.get('range', 1, type=int)
+        keyword = request.args.get('keyword', type=str)
         count = 10
         start = (page - 1) * count + 1
 
@@ -33,6 +34,9 @@ def api_search():
             'count': count,
             'format': 'json'
         }
+        # もしキーワードがあれば、poaramsに追加
+        if keyword:
+            params['keyword'] = keyword
 
         response = requests.get(api_url, params=params)
         response.raise_for_status()
