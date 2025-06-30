@@ -78,17 +78,18 @@ def api_search():
         data = response.json()
 
         results = data.get('results', {})
-        # ★ 修正点1: 先に店舗リストを変数に格納する
         all_shops = results.get('shop', [])
 
-        # ★ 修正点2: 距離ソートのロジックを適用
-        if sort_by == 'distance' and lat is not None and lng is not None:
+        # sort_byの値に関わらず、常に距離を計算して各店舗情報に追加する
+        if lat is not None and lng is not None:
             for shop in all_shops:
                 shop_lat = float(shop['lat'])
                 shop_lng = float(shop['lng'])
                 distance_km = haversine_distance(lat, lng, shop_lat, shop_lng)
                 shop['distance_m'] = round(distance_km * 1000)
-            
+        
+        # もし「距離の近い順」が選択されていれば、ソートを実行
+        if sort_by == 'distance':
             all_shops.sort(key=lambda x: x.get('distance_m', float('inf')))
 
         total_results = int(results.get('results_available', 0))
