@@ -36,7 +36,12 @@ def api_search():
         }
         # もしキーワードがあれば、poaramsに追加
         if keyword:
-            params['keyword'] = keyword
+            # 全角スペースを半角スペースに統一
+            normalized_keyword = keyword.replace('　', ' ')
+            # スペースで分割し、空の要素を除外
+            words = [word for word in normalized_keyword.split(' ') if word]
+            # '+'で連結してAPI用のキーワードを作成
+            params['keyword'] = '+'.join(words)
 
         response = requests.get(api_url, params=params)
         response.raise_for_status()
