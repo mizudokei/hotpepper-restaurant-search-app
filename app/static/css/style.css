@@ -17,6 +17,14 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+#map {
+    height: 400px;
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
 /* キーワード入力欄のスタイル */
 #keyword {
     padding: 8px;
