@@ -1,8 +1,9 @@
-// app/static/js/main.js
-
+/**
+ * DOMの読み込みが完了した後に、すべての処理を開始するためのイベントリスナー
+ */
 document.addEventListener('DOMContentLoaded', () => {
     /**
-     * Leafletのデフォルトアイコンが画像を見つけられるように、パスを明示的に設定
+     * Leafletのデフォルトアイコンが画像を見つけられるように、パスを明示的に設定。
      */
     L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
 
@@ -10,11 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const rangeSelect = document.getElementById('range');
     const keywordInput = document.getElementById('keyword');
+    const sortOrderSelect = document.getElementById('sort-order');
+    const budgetSelect = document.getElementById('budget');
     const resultsContainer = document.getElementById('search-results-container');
     const paginationContainer = document.getElementById('pagination-container');
     const loadingSpinner = document.getElementById('loading-spinner');
-    const budgetSelect = document.getElementById('budget');
-    const sortOrderSelect = document.getElementById('sort-order');
     const latInput = document.getElementById('lat');
     const lngInput = document.getElementById('lng');
 
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * 「現在地で検索」ボタンがクリックされた時のイベントリスナー
-     * 新規検索として、位置情報をリセットし、1ページ目から検索を開始する
+     * 新規検索として、位置情報をリセットし、1ページ目から検索を開始。
      */
     searchBtn.addEventListener('click', () => {
         latInput.value = '';
@@ -62,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {number} [page=1] - 検索したいページ番号
      */
     async function searchRestaurants(page = 1) {
-        // まだ位置情報がなければ、Geolocation APIで取得する
+        // --- 1. 位置情報の取得 ---
+        // まだ位置情報がなければ、Geolocation APIで取得。
         if (!latInput.value || !lngInput.value) {
             if (!navigator.geolocation) {
                 alert('お使いのブラウザは位置情報機能に対応していません。');
@@ -79,9 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 onError
             );
-            return;
+            return; // Geolocation APIの処理が終わるまで一旦中断
         }
 
+        // --- 2. 検索開始のUI準備 ---
         loadingSpinner.classList.remove('hidden');
         resultsContainer.innerHTML = '';
         paginationContainer.innerHTML = '';
@@ -89,7 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const lat = latInput.value;
         const lng = lngInput.value;
 
-        // 地図が未初期化の場合、現在地を中心に地図を作成する
+        // --- 3. 地図のセットアップ ---
+        // 地図が未初期化の場合、現在地を中心に地図を作成。
         if (!map) {
             document.getElementById('map').classList.remove('hidden');
             map = L.map('map').setView([lat, lng], 15);
@@ -99,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             restaurantMarkersLayer = L.layerGroup().addTo(map);
         }
 
-        // 現在地マーカーを設置または位置を更新する
+        // 現在地マーカーを設置または位置を更新。
         if (!currentLocationMarker) {
             currentLocationMarker = L.marker([lat, lng], { icon: currentLocationIcon }).addTo(map);
             currentLocationMarker.bindPopup("あなたの現在地").openPopup();
@@ -108,12 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         map.setView([lat, lng], 15);
 
-        // APIに送信する検索パラメータを組み立てる
+        // --- 4. APIに送信する検索パラメータを組み立てる ---
         const params = new URLSearchParams({
             lat: lat,
             lng: lng,
             range: rangeSelect.value,
-            budget: budgetSelect.value,
             sort_by: sortOrderSelect.value,
             page: page
         });
@@ -134,25 +137,24 @@ document.addEventListener('DOMContentLoaded', () => {
             params.append('budget', budgetSelect.value);
         }
 
+        // --- 5. API通信と結果描画 ---
         try {
-            // バックエンドのAPIを呼び出す
             const response = await fetch(`/api/search?${params}`);
             if (!response.ok) throw new Error(`サーバーエラー: ${response.status}`);
 
             const data = await response.json();
-            // 受け取ったデータで画面全体を描画する
-            render(data);
+            render(data); // 受け取ったデータで画面全体を描画
         } catch (error) {
             console.error('検索に失敗しました:', error);
             resultsContainer.innerHTML = '<p>検索に失敗しました。もう一度お試しください。</p>';
         } finally {
-            // 成功・失敗にかかわらず、ローディングスピナーを非表示にする
+            // 成功・失敗にかかわらず、最後に必ずローディングスピナーを非表示にする
             loadingSpinner.classList.add('hidden');
         }
     }
 
     /**
-     * 受け取ったデータをもとに、各描画関数を呼び出す
+     * 受け取ったデータをもとに、各描画関数を呼び出すハブ関数
      * @param {object} data - /api/searchから返されたJSONデータ
      */
     function render(data) {
@@ -166,13 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Array} shops - 店舗情報の配列
      */
     function renderMarkers(shops) {
-        // 既存のレストランマーカーを一度すべてクリア
         if (restaurantMarkersLayer) {
             restaurantMarkersLayer.clearLayers();
         }
         if (shops.length === 0) return;
 
-        // 各店舗のマーカーを地図に追加
         shops.forEach(shop => {
             const marker = L.marker([shop.lat, shop.lng], { icon: restaurantIcon }).addTo(restaurantMarkersLayer);
             marker.bindPopup(`<b>${shop.name}</b><br><a href="/shop/${shop.id}" target="_blank">詳細を見る</a>`);
@@ -189,25 +189,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const shopsHtml = shops.map(shop => {
-            // 距離が計算されていれば表示用のHTMLタグを生成
-            const distanceHtml = shop.distance_m
-                ? `<p class="shop-card__distance">現在地から約${shop.distance_m}m</p>`
-                : '';
-
+            const distanceHtml = shop.distance_m ? `<p class="shop-card__distance">現在地から約${shop.distance_m}m</p>` : '';
             return `
-            <a href="/shop/${shop.id}" class="shop-card-link" target="_blank" rel="noopener noreferrer">
-                <div class="shop-card">
-                    <div class="shop-card__image">
-                        <img src="${shop.photo.pc.l}" alt="${shop.name}の画像">
+                <a href="/shop/${shop.id}" class="shop-card-link" target="_blank" rel="noopener noreferrer">
+                    <div class="shop-card">
+                        <div class="shop-card__image">
+                            <img src="${shop.photo.pc.l}" alt="${shop.name}の画像">
+                        </div>
+                        <div class="shop-card__content">
+                            <h2 class="shop-card__name">${shop.name}</h2>
+                            <p class="shop-card__access">${shop.mobile_access}</p>
+                            ${distanceHtml} 
+                        </div>
                     </div>
-                    <div class="shop-card__content">
-                        <h2 class="shop-card__name">${shop.name}</h2>
-                        <p class="shop-card__access">${shop.mobile_access}</p>
-                        ${distanceHtml} 
-                    </div>
-                </div>
-            </a>
-        `;
+                </a>
+            `;
         }).join('');
         resultsContainer.innerHTML = shopsHtml;
     }
@@ -227,11 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
             paginationHtml += `<button class="page-btn" data-page="${current_page - 1}">&laquo; 前へ</button>`;
         }
         for (let i = 1; i <= total_pages; i++) {
-            if (i === current_page) {
-                paginationHtml += `<span class="current">${i}</span>`;
-            } else {
-                paginationHtml += `<button class="page-btn" data-page="${i}">${i}</button>`;
-            }
+            paginationHtml += (i === current_page)
+                ? `<span class="current">${i}</span>`
+                : `<button class="page-btn" data-page="${i}">${i}</button>`;
         }
         if (current_page < total_pages) {
             paginationHtml += `<button class="page-btn" data-page="${current_page + 1}">次へ &raquo;</button>`;
@@ -239,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationHtml += '</div>';
         paginationContainer.innerHTML = paginationHtml;
 
-        // 生成した各ページボタンにクリックイベントを設定
         paginationContainer.querySelectorAll('.page-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const page = e.target.dataset.page;
