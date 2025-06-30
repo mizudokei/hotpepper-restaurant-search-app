@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('search-results-container');
     const paginationContainer = document.getElementById('pagination-container');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const sortOrderSelect = document.getElementById('sort-order');
     const latInput = document.getElementById('lat');
     const lngInput = document.getElementById('lng');
 
@@ -111,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lat: lat,
             lng: lng,
             range: rangeSelect.value,
+            sort_by: sortOrderSelect.value,
             page: page
         });
         if (keywordInput.value) {
@@ -126,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // バックエンドのAPIを呼び出す
             const response = await fetch(`/api/search?${params}`);
             if (!response.ok) throw new Error(`サーバーエラー: ${response.status}`);
-            
+
             const data = await response.json();
             // 受け取ったデータで画面全体を描画する
             render(data);
@@ -176,7 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsContainer.innerHTML = '<p>該当するレストランは見つかりませんでした。</p>';
             return;
         }
-        const shopsHtml = shops.map(shop => `
+        const shopsHtml = shops.map(shop => {
+            // 距離が計算されていれば表示用のHTMLタグを生成
+            const distanceHtml = shop.distance_m
+                ? `<p class="shop-card__distance">現在地から約${shop.distance_m}m</p>`
+                : '';
+
+            return `
             <a href="/shop/${shop.id}" class="shop-card-link" target="_blank" rel="noopener noreferrer">
                 <div class="shop-card">
                     <div class="shop-card__image">
@@ -185,10 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="shop-card__content">
                         <h2 class="shop-card__name">${shop.name}</h2>
                         <p class="shop-card__access">${shop.mobile_access}</p>
+                        ${distanceHtml} 
                     </div>
                 </div>
             </a>
-        `).join('');
+        `;
+        }).join('');
         resultsContainer.innerHTML = shopsHtml;
     }
 

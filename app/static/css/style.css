@@ -66,6 +66,12 @@ body {
     overflow: hidden;
 }
 
+.shop-card__distance {
+    font-weight: bold;
+    color: #d9534f; /* 少し赤みがかった色 */
+    margin-top: 10px;
+}
+
 .shop-card__image {
     width: 200px;
     flex-shrink: 0;
