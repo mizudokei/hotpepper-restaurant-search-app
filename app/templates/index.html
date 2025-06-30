@@ -41,6 +41,17 @@
             </div>
         </div>
         <br>
+        <div class="genre-filter">
+            <label>こだわり条件:</label>
+            <div class="genre-options">
+                {% for sc in special_categories %}
+                <label>
+                    <input type="checkbox" name="special_category" value="{{ sc.code }}"> {{ sc.name }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <br>
         <div>
             <label for="budget">予算:</label>
             <select name="budget" id="budget">

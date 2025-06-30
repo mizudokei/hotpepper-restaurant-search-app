@@ -125,6 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const genreCodes = Array.from(checkedGenres).map(cb => cb.value);
             params.append('genre', genreCodes.join(','));
         }
+        const checkedSpecialCategories = document.querySelectorAll('input[name="special_category"]:checked');
+        if (checkedSpecialCategories.length > 0) {
+            const scCodes = Array.from(checkedSpecialCategories).map(cb => cb.value);
+            params.append('special_category', scCodes.join(','));
+        }
         if (budgetSelect.value) {
             params.append('budget', budgetSelect.value);
         }

@@ -20,6 +20,20 @@ def get_all_genres():
         print(f"Failed to fetch genres: {e}")
         return []
 
+def get_all_special_categories():
+    """こだわりマスターAPIから全条件を取得する"""
+    try:
+        api_key = current_app.config['API_KEY']
+        url = 'http://webservice.recruit.co.jp/hotpepper/special_category/v1/'
+        params = {'key': api_key, 'format': 'json'}
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data.get('results', {}).get('special_category', [])
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch special categories: {e}")
+        return []
+
 def haversine_distance(lat1, lon1, lat2, lon2):
     """ 2点間の緯度経度から距離(km)を計算する """
     R = 6371.0  # 地球の半径 (km)
@@ -34,7 +48,8 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 @bp.route('/')
 def index():
     genres = get_all_genres()
-    return render_template('index.html', genres=genres)
+    special_categories = get_all_special_categories()
+    return render_template('index.html', genres=genres, special_categories=special_categories)
 
 @bp.route('/api/search')
 def api_search():
@@ -47,6 +62,7 @@ def api_search():
         keyword = request.args.get('keyword', type=str)
         genre = request.args.get('genre', type=str)
         budget = request.args.get('budget', type=str)
+        special_category = request.args.get('special_category', type=str)
         sort_by = request.args.get('sort_by')
         count = 10
         start = (page - 1) * count + 1
@@ -58,7 +74,10 @@ def api_search():
         api_key = current_app.config['API_KEY']
         api_url = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/'
         params = {
-            'key': api_key, 'lat': lat, 'lng': lng, 'range': range_code,
+            'key': api_key, 
+            'lat': lat, 
+            'lng': lng, 
+            'range': range_code,
             'start': start, 'count': count, 'format': 'json'
         }
         if keyword:
@@ -68,6 +87,8 @@ def api_search():
                 params['keyword'] = '+'.join(words)
         if genre:
             params['genre'] = genre
+        if special_category:
+            params['special_category'] = special_category
         if budget:
             params['budget'] = budget
         if sort_by == '4':
