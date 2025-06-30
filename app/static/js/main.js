@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('search-results-container');
     const paginationContainer = document.getElementById('pagination-container');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const budgetSelect = document.getElementById('budget');
     const sortOrderSelect = document.getElementById('sort-order');
     const latInput = document.getElementById('lat');
     const lngInput = document.getElementById('lng');
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lat: lat,
             lng: lng,
             range: rangeSelect.value,
+            budget: budgetSelect.value,
             sort_by: sortOrderSelect.value,
             page: page
         });
@@ -122,6 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (checkedGenres.length > 0) {
             const genreCodes = Array.from(checkedGenres).map(cb => cb.value);
             params.append('genre', genreCodes.join(','));
+        }
+        if (budgetSelect.value) {
+            params.append('budget', budgetSelect.value);
         }
 
         try {

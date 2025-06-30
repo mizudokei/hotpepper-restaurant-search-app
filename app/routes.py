@@ -46,7 +46,8 @@ def api_search():
         range_code = request.args.get('range', 1, type=int)
         keyword = request.args.get('keyword', type=str)
         genre = request.args.get('genre', type=str)
-        sort_by = request.args.get('sort_by') # フロントエンドと名前を合わせる
+        budget = request.args.get('budget', type=str)
+        sort_by = request.args.get('sort_by')
         count = 10
         start = (page - 1) * count + 1
 
@@ -67,7 +68,8 @@ def api_search():
                 params['keyword'] = '+'.join(words)
         if genre:
             params['genre'] = genre
-        # おすすめ順が選択された場合、APIのorderパラメータを設定
+        if budget:
+            params['budget'] = budget
         if sort_by == '4':
             params['order'] = '4'
 
