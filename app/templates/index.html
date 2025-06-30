@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>レストラン検索</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <h1>レストラン検索</h1>
-    <form id="search-form" onsubmit="return false;"> <div>
+    <form id="search-form" onsubmit="return false;">
+        <div>
             <label for="range">検索半径:</label>
             <select name="range" id="range">
                 <option value="1">300m</option>
@@ -21,6 +24,17 @@
         <div>
             <label for="keyword">キーワード:</label>
             <input type="text" id="keyword" name="keyword" placeholder="例：ラーメン、個室">
+        </div>
+        <br>
+        <div class="genre-filter">
+            <label>ジャンル:</label>
+            <div class="genre-options">
+                {% for genre in genres %}
+                <label>
+                    <input type="checkbox" name="genre" value="{{ genre.code }}"> {{ genre.name }}
+                </label>
+                {% endfor %}
+            </div>
         </div>
         <br>
         <button type="button" id="search-btn">現在地で検索</button>
@@ -39,4 +53,5 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>

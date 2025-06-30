@@ -5,9 +5,26 @@ import requests
 
 bp = Blueprint('main', __name__)
 
+def get_all_genres():
+    """グルメジャンルマスターAPIから全ジャンルを取得する"""
+    try:
+        api_key = current_app.config['API_KEY']
+        url = 'http://webservice.recruit.co.jp/hotpepper/genre/v1/'
+        params = {'key': api_key, 'format': 'json'}
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data.get('results', {}).get('genre', [])
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch genres: {e}")
+        return []
+
 @bp.route('/')
 def index():
-    return render_template('index.html')
+    # ページ表示時に全ジャンルを取得
+    genres = get_all_genres()
+    # 取得したジャンルリストをテンプレートに渡す
+    return render_template('index.html', genres=genres)
 
 @bp.route('/api/search')
 def api_search():
@@ -17,6 +34,7 @@ def api_search():
         lng = request.args.get('lng', type=float)
         range_code = request.args.get('range', 1, type=int)
         keyword = request.args.get('keyword', type=str)
+        genre = request.args.get('genre', type=str)
         count = 10
         start = (page - 1) * count + 1
 
@@ -42,6 +60,8 @@ def api_search():
             words = [word for word in normalized_keyword.split(' ') if word]
             # '+'で連結してAPI用のキーワードを作成
             params['keyword'] = '+'.join(words)
+        if genre:
+            params['genre'] = genre
 
         response = requests.get(api_url, params=params)
         response.raise_for_status()

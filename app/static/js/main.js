@@ -1,25 +1,25 @@
 // app/static/js/main.js
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     // HTML要素を取得
-    const searchBtn = document.getElementById('search-btn');
-    const rangeSelect = document.getElementById('range');
-    const resultsContainer = document.getElementById('search-results-container');
-    const paginationContainer = document.getElementById('pagination-container');
-    const keywordInput = document.getElementById('keyword');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    
+    const searchBtn = document.getElementById("search-btn");
+    const rangeSelect = document.getElementById("range");
+    const resultsContainer = document.getElementById("search-results-container");
+    const paginationContainer = document.getElementById("pagination-container");
+    const keywordInput = document.getElementById("keyword");
+    const loadingSpinner = document.getElementById("loading-spinner");
+
     // 緯度・経度をJavaScript内で保持するための隠しフィールド
-    const latInput = document.getElementById('lat');
-    const lngInput = document.getElementById('lng');
+    const latInput = document.getElementById("lat");
+    const lngInput = document.getElementById("lng");
 
     /**
      * 「現在地で検索」ボタンがクリックされた時の処理
      * 新規検索なので、緯度経度をリセットしてから検索を開始する
      */
-    searchBtn.addEventListener('click', () => {
-        latInput.value = '';
-        lngInput.value = '';
+    searchBtn.addEventListener("click", () => {
+        latInput.value = "";
+        lngInput.value = "";
         searchRestaurants(1); // 1ページ目から検索開始
     });
 
@@ -31,36 +31,41 @@ document.addEventListener('DOMContentLoaded', () => {
         // 緯度・経度がまだ取得できていない場合、Geolocation APIを呼び出す
         if (!latInput.value || !lngInput.value) {
             if (!navigator.geolocation) {
-                alert('お使いのブラウザは位置情報機能に対応していません。');
+                alert("お使いのブラウザは位置情報機能に対応していません。");
                 return;
             }
-            resultsContainer.innerHTML = '<p>位置情報を取得中...</p>';
-            paginationContainer.innerHTML = '';
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    latInput.value = position.coords.latitude;
-                    lngInput.value = position.coords.longitude;
-                    searchRestaurants(page); // 位置情報を取得できたので、再度この関数を呼び出して検索を実行
-                },
-                onError
-            );
+            resultsContainer.innerHTML = "<p>位置情報を取得中...</p>";
+            paginationContainer.innerHTML = "";
+            navigator.geolocation.getCurrentPosition((position) => {
+                latInput.value = position.coords.latitude;
+                lngInput.value = position.coords.longitude;
+                searchRestaurants(page); // 位置情報を取得できたので、再度この関数を呼び出して検索を実行
+            }, onError);
             return; // Geolocation APIの結果が返ってくるまで一旦処理を終了
         }
 
         // ローディング表示
-        loadingSpinner.classList.remove('hidden'); // スピナー表示
-        resultsContainer.innerHTML = '';
-        paginationContainer.innerHTML = '';
+        loadingSpinner.classList.remove("hidden"); // スピナー表示
+        resultsContainer.innerHTML = "";
+        paginationContainer.innerHTML = "";
 
         // APIに渡すクエリパラメータを組み立て
         const params = new URLSearchParams({
             lat: latInput.value,
             lng: lngInput.value,
             range: rangeSelect.value,
-            page: page
+            page: page,
         });
         if (keywordInput.value) {
-            params.append('keyword', keywordInput.value);
+            params.append("keyword", keywordInput.value);
+        }
+
+        const checkedGenres = document.querySelectorAll(
+            'input[name="genre"]:checked'
+        );
+        if (checkedGenres.length > 0) {
+            const genreCodes = Array.from(checkedGenres).map((cb) => cb.value);
+            params.append("genre", genreCodes.join(",")); // カンマ区切りで連結
         }
 
         try {
@@ -70,15 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`サーバーエラー: ${response.status}`);
             }
             const data = await response.json();
-            
+
             // 受け取ったデータで画面全体を再描画
             render(data);
         } catch (error) {
-            console.error('検索に失敗しました:', error);
-            resultsContainer.innerHTML = '<p>検索に失敗しました。もう一度お試しください。</p>';
+            console.error("検索に失敗しました:", error);
+            resultsContainer.innerHTML =
+                "<p>検索に失敗しました。もう一度お試しください。</p>";
         } finally {
             // ローディング非表示
-            loadingSpinner.classList.add('hidden');
+            loadingSpinner.classList.add("hidden");
         }
     }
 
@@ -97,11 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderShops(shops) {
         if (shops.length === 0) {
-            resultsContainer.innerHTML = '<p>該当するレストランは見つかりませんでした。</p>';
+            resultsContainer.innerHTML =
+                "<p>該当するレストランは見つかりませんでした。</p>";
             return;
         }
 
-        const shopsHtml = shops.map(shop => `
+        const shopsHtml = shops
+            .map(
+                (shop) => `
             <a href="/shop/${shop.id}" class="shop-card-link" target="_blank" rel="noopener noreferrer">
                 <div class="shop-card">
                     <div class="shop-card__image">
@@ -113,7 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             </a>
-        `).join('');
+        `
+            )
+            .join("");
 
         resultsContainer.innerHTML = shopsHtml;
     }
@@ -124,17 +135,18 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderPagination(pagination) {
         const { total_pages, current_page } = pagination;
-        
+
         if (!total_pages || total_pages <= 1) {
-            paginationContainer.innerHTML = '';
+            paginationContainer.innerHTML = "";
             return;
         }
 
         let paginationHtml = '<div class="pagination">';
-        
+
         // 「前へ」ボタン
         if (current_page > 1) {
-            paginationHtml += `<button class="page-btn" data-page="${current_page - 1}">&laquo; 前へ</button>`;
+            paginationHtml += `<button class="page-btn" data-page="${current_page - 1
+                }">&laquo; 前へ</button>`;
         }
 
         // ページ番号ボタン
@@ -148,15 +160,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 「次へ」ボタン
         if (current_page < total_pages) {
-            paginationHtml += `<button class="page-btn" data-page="${current_page + 1}">次へ &raquo;</button>`;
+            paginationHtml += `<button class="page-btn" data-page="${current_page + 1
+                }">次へ &raquo;</button>`;
         }
 
-        paginationHtml += '</div>';
+        paginationHtml += "</div>";
         paginationContainer.innerHTML = paginationHtml;
 
         // 生成した各ボタンにクリックイベントを設定
-        paginationContainer.querySelectorAll('.page-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+        paginationContainer.querySelectorAll(".page-btn").forEach((button) => {
+            button.addEventListener("click", (e) => {
                 const page = e.target.dataset.page;
                 searchRestaurants(page); // 対応するページのレストランを検索
             });
@@ -168,19 +181,19 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {object} error - エラーオブジェクト
      */
     function onError(error) {
-        let message = '';
+        let message = "";
         switch (error.code) {
             case error.PERMISSION_DENIED:
-                message = '位置情報の利用が許可されていません。';
+                message = "位置情報の利用が許可されていません。";
                 break;
             case error.POSITION_UNAVAILABLE:
-                message = '位置情報を取得できませんでした。';
+                message = "位置情報を取得できませんでした。";
                 break;
             case error.TIMEOUT:
-                message = '位置情報の取得がタイムアウトしました。';
+                message = "位置情報の取得がタイムアウトしました。";
                 break;
             default:
-                message = '不明なエラーが発生しました。';
+                message = "不明なエラーが発生しました。";
                 break;
         }
         resultsContainer.innerHTML = `<p>${message}</p>`;
