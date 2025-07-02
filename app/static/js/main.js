@@ -52,13 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.toggleLoading(false);
             return;
         }
-        
+
         ui.toggleLoading(true);
         ui.showMessage(''); // 既存の結果をクリア
 
         // --- 2. 地図のセットアップ ---
-        map.setupMap(latInput.value, lngInput.value);
-        
+        const lat = latInput.value
+        const lng = lngInput.value;
+        map.setupMap(lat, lng);
+
+        // 選択された半径コードをメートルに変換
+        const radiusMeters = [300, 500, 1000, 2000, 3000][searchFormElements.range.value - 1];
+        // mapモジュールに円の描画を指示
+        map.drawSearchRadius(lat, lng, radiusMeters);
+
         // --- 3. 検索パラメータの組み立て ---
         const params = buildSearchParams(page);
 
