@@ -36,6 +36,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /**
+     * 結果ゼロ件画面の提案ボタンに対するイベントリスナーをセットアップします。
+     */
+    ui.setupSuggestionListeners(
+        // 「範囲を広げる」ボタンが押された時の処理
+        () => {
+            const currentRangeIndex = searchFormElements.range.selectedIndex;
+            if (currentRangeIndex < searchFormElements.range.options.length - 1) {
+                searchFormElements.range.selectedIndex = currentRangeIndex + 1;
+                handleSearch(1);
+            }
+        },
+        // 「フィルターをクリア」ボタンが押された時の処理
+        () => {
+            searchFormElements.keyword.value = '';
+            document.querySelectorAll('input[name="genre"]:checked').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="special_category"]:checked').forEach(cb => cb.checked = false);
+            searchFormElements.budget.value = '';
+            handleSearch(1);
+        }
+    );
+
+    /**
      * 検索処理の全体の流れを制御する
      * @param {number} page - 検索するページ番号
      */
@@ -76,11 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const data = await api.fetchRestaurants(params);
             map.renderMarkers(data.shops);
-            ui.renderShops(data.shops);
+            ui.renderShops(data.shops, searchFormElements);
             // ページネーション描画時、クリック時のコールバックとして再度handleSearchを渡す
             ui.renderPagination(data.pagination, handleSearch);
         } catch (error) {
-            ui.showMessage('レストランの検索に失敗しました。');
+            console.error('An error occurred during rendering:', error);
+            ui.showMessage('結果の表示中にエラーが発生しました。');
         } finally {
             ui.toggleLoading(false);
         }
