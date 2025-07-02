@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         genres: () => document.querySelectorAll('input[name="genre"]:checked'),
         specialCategories: () => document.querySelectorAll('input[name="special_category"]:checked'),
     };
+    loadSearchCriteria();
 
     /**
      * 「現在地で検索」ボタンのクリックイベント
@@ -52,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.toggleLoading(false);
             return;
         }
+
+        saveSearchCriteria(); // 検索条件を保存
 
         ui.toggleLoading(true);
         ui.showMessage(''); // 既存の結果をクリア
@@ -133,5 +136,54 @@ document.addEventListener('DOMContentLoaded', () => {
             params.append('special_category', checkedSpecialCategories.join(','));
         }
         return params;
+    }
+
+    /**
+     * 検索条件をローカルストレージに保存
+     */
+    function saveSearchCriteria() {
+        // 保存する条件をオブジェクトとしてまとめる
+        const criteria = {
+            range: searchFormElements.range.value,
+            keyword: searchFormElements.keyword.value,
+            sort_by: searchFormElements.sortOrder.value,
+            budget: searchFormElements.budget.value,
+            genres: Array.from(searchFormElements.genres()).map(cb => cb.value),
+            special_categories: Array.from(searchFormElements.specialCategories()).map(cb => cb.value),
+        };
+        // オブジェクトをJSON文字列に変換してlocalStorageに保存
+        localStorage.setItem('restaurantSearchCriteria', JSON.stringify(criteria));
+    }
+
+    /**
+     * ローカルストレージから検索条件を読み込み、フォームに反映
+     */
+    function loadSearchCriteria() {
+        const savedCriteria = localStorage.getItem('restaurantSearchCriteria');
+        if (savedCriteria) {
+            const criteria = JSON.parse(savedCriteria);
+
+            // 各フォーム要素に値を設定
+            searchFormElements.range.value = criteria.range || '3';
+            searchFormElements.keyword.value = criteria.keyword || '';
+            searchFormElements.sortOrder.value = criteria.sort_by || '4';
+            searchFormElements.budget.value = criteria.budget || '';
+
+            // チェックボックスの状態を復元
+            if (criteria.genres && criteria.genres.length > 0) {
+                document.querySelectorAll('input[name="genre"]').forEach(checkbox => {
+                    if (criteria.genres.includes(checkbox.value)) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+            if (criteria.special_categories && criteria.special_categories.length > 0) {
+                document.querySelectorAll('input[name="special_category"]').forEach(checkbox => {
+                    if (criteria.special_categories.includes(checkbox.value)) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+        }
     }
 });
