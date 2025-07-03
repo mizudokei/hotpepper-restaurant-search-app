@@ -1,8 +1,10 @@
 // --- モジュールレベルの変数 ---
 let map = null;
 let markersLayer = null;
+let heatmapLayer = null;
 let currentLocationMarker = null;
 let searchRadiusCircle = null;
+let currentHeatPoints = []; // ★★★ ヒートマップ用のデータポイントを保持する変数を追加 ★★★
 
 // --- アイコンの定義 ---
 const currentLocationIcon = L.icon({
@@ -28,11 +30,17 @@ export function setupMap(lat, lng) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-        
-        // L.markerClusterGroup() を使い、クラスタリング機能を持つレイヤーを作成します。
+
         markersLayer = L.markerClusterGroup().addTo(map);
+
+        heatmapLayer = L.heatLayer([], {
+            radius: 40,
+            blur: 25,
+            maxZoom: 18,
+            gradient: { 0.4: 'lime', 0.65: 'yellow', 1: 'red' }
+        });
     }
-    
+
     if (!currentLocationMarker) {
         currentLocationMarker = L.marker([lat, lng], { icon: currentLocationIcon }).addTo(map);
         currentLocationMarker.bindPopup("あなたの現在地").openPopup();
@@ -54,8 +62,8 @@ export function drawSearchRadius(lat, lng, radiusMeters) {
     if (!searchRadiusCircle) {
         searchRadiusCircle = L.circle([lat, lng], {
             radius: radiusMeters,
-            color: '#007bff',
-            fillColor: '#007bff',
+            color: '#3388ff',
+            fillColor: '#3388ff',
             fillOpacity: 0.1,
         }).addTo(map);
     } else {
@@ -66,20 +74,69 @@ export function drawSearchRadius(lat, lng, radiusMeters) {
 }
 
 /**
- * 地図上にレストランのマーカーを描画します。
+ * 地図上に表示するためのマーカーとヒートマップのデータを準備・更新します。
  * @param {Array} shops - 店舗情報の配列
  */
-export function renderMarkers(shops) {
+export function renderMapData(shops) {
+    // 既存のマーカーをクリア
     if (markersLayer) {
         markersLayer.clearLayers();
     }
-    if (!shops || shops.length === 0) return;
+
+    // 結果が0件なら、データポイントもクリアして終了
+    if (!shops || shops.length === 0) {
+        currentHeatPoints = [];
+        if (heatmapLayer) {
+            heatmapLayer.setLatLngs([]);
+        }
+        return;
+    }
 
     const markers = [];
+    const heatPoints = [];
+
     shops.forEach(shop => {
+        // マーカー用のデータを作成
         const marker = L.marker([shop.lat, shop.lng], { icon: restaurantIcon });
         marker.bindPopup(`<b>${shop.name}</b><br><a href="/shop/${shop.id}" target="_blank">詳細を見る</a>`);
         markers.push(marker);
+
+        // ヒートマップ用のデータを作成
+        heatPoints.push([shop.lat, shop.lng, 1.0]);
     });
+
+    // 作成したデータを各レイヤーや変数にセット
     markersLayer.addLayers(markers);
+    currentHeatPoints = heatPoints;
+
+    // ★★★ もしヒートマップが現在表示中なら、すぐに更新する ★★★
+    if (map && map.hasLayer(heatmapLayer)) {
+        heatmapLayer.setLatLngs(currentHeatPoints);
+    }
+}
+
+/**
+ * 地図の表示モードを切り替えます。
+ * @param {'pins' | 'heatmap'} mode - 表示するモード
+ */
+export function setMapView(mode) {
+    if (!map) return;
+
+    if (mode === 'heatmap') {
+        if (map.hasLayer(markersLayer)) {
+            map.removeLayer(markersLayer);
+        }
+        if (!map.hasLayer(heatmapLayer)) {
+            map.addLayer(heatmapLayer);
+            // ★★★ レイヤーを追加したタイミングで、保持していたデータを描画する ★★★
+            heatmapLayer.setLatLngs(currentHeatPoints);
+        }
+    } else { // 'pins' またはデフォルト
+        if (map.hasLayer(heatmapLayer)) {
+            map.removeLayer(heatmapLayer);
+        }
+        if (!map.hasLayer(markersLayer)) {
+            map.addLayer(markersLayer);
+        }
+    }
 }

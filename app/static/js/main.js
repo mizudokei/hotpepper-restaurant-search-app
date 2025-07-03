@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const latInput = document.getElementById('lat');
     const lngInput = document.getElementById('lng');
+    const pinsViewBtn = document.getElementById('view-mode-pins');
+    const heatmapViewBtn = document.getElementById('view-mode-heatmap');
     // 検索フォームの各要素をまとめてオブジェクトとして管理
     const searchFormElements = {
         range: document.getElementById('range'),
@@ -33,6 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
         latInput.value = '';
         lngInput.value = '';
         handleSearch(1); // 1ページ目から新規検索
+    });
+
+    pinsViewBtn.addEventListener('click', () => {
+        map.setMapView('pins');
+        pinsViewBtn.classList.add('active');
+        heatmapViewBtn.classList.remove('active');
+    });
+
+    heatmapViewBtn.addEventListener('click', () => {
+        map.setMapView('heatmap');
+        heatmapViewBtn.classList.add('active');
+        pinsViewBtn.classList.remove('active');
     });
 
     /**
@@ -97,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 4. API呼び出しと結果描画 ---
         try {
             const data = await api.fetchRestaurants(params);
-            map.renderMarkers(data.shops);
+            map.renderMapData(data.shops);
             ui.renderShops(data.shops, searchFormElements);
             // ページネーション描画時、クリック時のコールバックとして再度handleSearchを渡す
             ui.renderPagination(data.pagination, handleSearch);
