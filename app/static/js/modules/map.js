@@ -1,8 +1,8 @@
 // --- モジュールレベルの変数 ---
 let map = null;
-let restaurantMarkersLayer = null;
+let markersLayer = null;
 let currentLocationMarker = null;
-let searchRadiusCircle = null; // ★★★ 検索範囲の円を管理する変数を追加 ★★★
+let searchRadiusCircle = null;
 
 // --- アイコンの定義 ---
 const currentLocationIcon = L.icon({
@@ -28,7 +28,9 @@ export function setupMap(lat, lng) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-        restaurantMarkersLayer = L.layerGroup().addTo(map);
+        
+        // L.markerClusterGroup() を使い、クラスタリング機能を持つレイヤーを作成します。
+        markersLayer = L.markerClusterGroup().addTo(map);
     }
     
     if (!currentLocationMarker) {
@@ -47,10 +49,9 @@ export function setupMap(lat, lng) {
  * @param {number} radiusMeters - 円の半径（メートル）
  */
 export function drawSearchRadius(lat, lng, radiusMeters) {
-    if (!map) return; // 地図がなければ何もしない
+    if (!map) return;
 
     if (!searchRadiusCircle) {
-        // 円がまだなければ新規作成
         searchRadiusCircle = L.circle([lat, lng], {
             radius: radiusMeters,
             color: '#007bff',
@@ -58,11 +59,9 @@ export function drawSearchRadius(lat, lng, radiusMeters) {
             fillOpacity: 0.1,
         }).addTo(map);
     } else {
-        // 既存の円があれば、中心と半径を更新
         searchRadiusCircle.setLatLng([lat, lng]);
         searchRadiusCircle.setRadius(radiusMeters);
     }
-    // 円が完全に見えるように地図のズームレベルを自動調整
     map.fitBounds(searchRadiusCircle.getBounds());
 }
 
@@ -71,13 +70,16 @@ export function drawSearchRadius(lat, lng, radiusMeters) {
  * @param {Array} shops - 店舗情報の配列
  */
 export function renderMarkers(shops) {
-    if (restaurantMarkersLayer) {
-        restaurantMarkersLayer.clearLayers();
+    if (markersLayer) {
+        markersLayer.clearLayers();
     }
     if (!shops || shops.length === 0) return;
 
+    const markers = [];
     shops.forEach(shop => {
-        const marker = L.marker([shop.lat, shop.lng], { icon: restaurantIcon }).addTo(restaurantMarkersLayer);
+        const marker = L.marker([shop.lat, shop.lng], { icon: restaurantIcon });
         marker.bindPopup(`<b>${shop.name}</b><br><a href="/shop/${shop.id}" target="_blank">詳細を見る</a>`);
+        markers.push(marker);
     });
+    markersLayer.addLayers(markers);
 }
