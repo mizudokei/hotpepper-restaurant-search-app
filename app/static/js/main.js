@@ -1,13 +1,8 @@
-// 各モジュールから、exportされた関数をインポート
 import * as api from './modules/api.js';
 import * as map from './modules/map.js';
 import * as ui from './modules/ui.js';
 
-/**
- * DOMの読み込みが完了した後に、すべての処理を開始
- */
 document.addEventListener('DOMContentLoaded', () => {
-    // Leafletの画像パスを設定
     L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
 
     // --- HTML要素の取得 ---
@@ -16,25 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const lngInput = document.getElementById('lng');
     const pinsViewBtn = document.getElementById('view-mode-pins');
     const heatmapViewBtn = document.getElementById('view-mode-heatmap');
-    // 検索フォームの各要素をまとめてオブジェクトとして管理
     const searchFormElements = {
         range: document.getElementById('range'),
         keyword: document.getElementById('keyword'),
         sortOrder: document.getElementById('sort-order'),
         budget: document.getElementById('budget'),
-        // チェックボックスは都度取得するため、関数として定義
         genres: () => document.querySelectorAll('input[name="genre"]:checked'),
         specialCategories: () => document.querySelectorAll('input[name="special_category"]:checked'),
     };
     loadSearchCriteria();
 
-    /**
-     * 「現在地で検索」ボタンのクリックイベント
-     */
+    // --- イベントリスナーの設定 ---
     searchBtn.addEventListener('click', () => {
         latInput.value = '';
         lngInput.value = '';
-        handleSearch(1); // 1ページ目から新規検索
+        handleSearch(1);
     });
 
     pinsViewBtn.addEventListener('click', () => {
@@ -49,34 +40,32 @@ document.addEventListener('DOMContentLoaded', () => {
         pinsViewBtn.classList.remove('active');
     });
 
-    /**
-     * 結果ゼロ件画面の提案ボタンに対するイベントリスナーをセットアップします。
-     */
-    ui.setupSuggestionListeners(
-        // 「範囲を広げる」ボタンが押された時の処理
-        () => {
+    ui.setupEventListeners(
+        () => { // onWidenSearch
             const currentRangeIndex = searchFormElements.range.selectedIndex;
             if (currentRangeIndex < searchFormElements.range.options.length - 1) {
                 searchFormElements.range.selectedIndex = currentRangeIndex + 1;
                 handleSearch(1);
             }
         },
-        // 「フィルターをクリア」ボタンが押された時の処理
-        () => {
+        () => { // onClearFilters
             searchFormElements.keyword.value = '';
             document.querySelectorAll('input[name="genre"]:checked').forEach(cb => cb.checked = false);
             document.querySelectorAll('input[name="special_category"]:checked').forEach(cb => cb.checked = false);
             searchFormElements.budget.value = '';
             handleSearch(1);
+        },
+        (shopId) => { // onMapLinkClick
+            map.highlightMarker(shopId);
+            ui.highlightListItem(shopId);
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
         }
     );
 
     /**
      * 検索処理の全体の流れを制御する
-     * @param {number} page - 検索するページ番号
      */
     async function handleSearch(page = 1) {
-        // --- 1. 位置情報を取得 (まだなければ) ---
         try {
             if (!latInput.value || !lngInput.value) {
                 ui.toggleLoading(true);
@@ -89,31 +78,29 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.toggleLoading(false);
             return;
         }
-
-        saveSearchCriteria(); // 検索条件を保存
-
+        saveSearchCriteria();
         ui.toggleLoading(true);
-        ui.showMessage(''); // 既存の結果をクリア
+        ui.showMessage('');
 
-        // --- 2. 地図のセットアップ ---
-        const lat = latInput.value
+        const lat = latInput.value;
         const lng = lngInput.value;
         map.setupMap(lat, lng);
-
-        // 選択された半径コードをメートルに変換
         const radiusMeters = [300, 500, 1000, 2000, 3000][searchFormElements.range.value - 1];
-        // mapモジュールに円の描画を指示
         map.drawSearchRadius(lat, lng, radiusMeters);
-
-        // --- 3. 検索パラメータの組み立て ---
+        
         const params = buildSearchParams(page);
 
-        // --- 4. API呼び出しと結果描画 ---
         try {
             const data = await api.fetchRestaurants(params);
-            map.renderMapData(data.shops);
+            // ▼▼▼▼▼ このコールバック関数を修正 ▼▼▼▼▼
+            const onPopupButtonClick = (shopId) => {
+                // ui.highlightListItemは、ハイライトとスクロールの両方を行います。
+                ui.highlightListItem(shopId);
+                // 不要なスクロール処理を削除しました。
+            };
+            // ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲
+            map.renderMapData(data.shops, onPopupButtonClick);
             ui.renderShops(data.shops, searchFormElements);
-            // ページネーション描画時、クリック時のコールバックとして再度handleSearchを渡す
             ui.renderPagination(data.pagination, handleSearch);
         } catch (error) {
             console.error('An error occurred during rendering:', error);
@@ -124,8 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Geolocation APIをPromiseでラップし、async/awaitで扱えるようにする
-     * @returns {Promise<GeolocationPosition>}
+     * Geolocation APIをPromiseでラップする
      */
     function getCurrentPosition() {
         return new Promise((resolve, reject) => {
@@ -147,8 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * 現在のフォーム入力値から検索パラメータを組み立てる
-     * @param {number} page - ページ番号
-     * @returns {URLSearchParams}
      */
     function buildSearchParams(page) {
         const params = new URLSearchParams({
@@ -179,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * 検索条件をローカルストレージに保存
      */
     function saveSearchCriteria() {
-        // 保存する条件をオブジェクトとしてまとめる
         const criteria = {
             range: searchFormElements.range.value,
             keyword: searchFormElements.keyword.value,
@@ -188,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             genres: Array.from(searchFormElements.genres()).map(cb => cb.value),
             special_categories: Array.from(searchFormElements.specialCategories()).map(cb => cb.value),
         };
-        // オブジェクトをJSON文字列に変換してlocalStorageに保存
         localStorage.setItem('restaurantSearchCriteria', JSON.stringify(criteria));
     }
 
@@ -199,26 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedCriteria = localStorage.getItem('restaurantSearchCriteria');
         if (savedCriteria) {
             const criteria = JSON.parse(savedCriteria);
-
-            // 各フォーム要素に値を設定
             searchFormElements.range.value = criteria.range || '3';
             searchFormElements.keyword.value = criteria.keyword || '';
             searchFormElements.sortOrder.value = criteria.sort_by || '4';
             searchFormElements.budget.value = criteria.budget || '';
-
-            // チェックボックスの状態を復元
             if (criteria.genres && criteria.genres.length > 0) {
                 document.querySelectorAll('input[name="genre"]').forEach(checkbox => {
-                    if (criteria.genres.includes(checkbox.value)) {
-                        checkbox.checked = true;
-                    }
+                    if (criteria.genres.includes(checkbox.value)) checkbox.checked = true;
                 });
             }
             if (criteria.special_categories && criteria.special_categories.length > 0) {
                 document.querySelectorAll('input[name="special_category"]').forEach(checkbox => {
-                    if (criteria.special_categories.includes(checkbox.value)) {
-                        checkbox.checked = true;
-                    }
+                    if (criteria.special_categories.includes(checkbox.value)) checkbox.checked = true;
                 });
             }
         }
