@@ -50,10 +50,13 @@ def search():
     """
     try:
         # --- 1. リクエストからクエリパラメータを安全に取得 ---
-        page = request.args.get('page', 1, type=int)
-        lat = request.args.get('lat', type=float)
-        lng = request.args.get('lng', type=float)
-        range_code = request.args.get('range', 1, type=int)
+        try:
+            page = int(request.args.get('page', 1))
+            lat = float(request.args.get('lat'))
+            lng = float(request.args.get('lng'))
+            range_code = int(request.args.get('range', 1))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid parameter type for lat, lng, or range.'}), 400
         keyword = request.args.get('keyword', type=str)
         genre = request.args.get('genre', type=str)
         special_category = request.args.get('special_category', type=str)
