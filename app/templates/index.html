@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -86,7 +88,11 @@
         <button id="view-mode-pins" class="map-view-btn active">ピン表示</button>
         <button id="view-mode-heatmap" class="map-view-btn">ヒートマップ表示</button>
     </div>
-    <div id="map" class="hidden"></div>
+
+    <div class="map-container">
+        <div id="map"></div>
+        <div id="route-summary" class="hidden"></div>
+    </div>
 
     <div id="loading-spinner" class="hidden"></div>
 

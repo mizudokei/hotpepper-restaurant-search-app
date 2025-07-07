@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         genres: () => document.querySelectorAll('input[name="genre"]:checked'),
         specialCategories: () => document.querySelectorAll('input[name="special_category"]:checked'),
     };
+    let currentShops = []; // 現在の店舗リストを保持する変数
     loadSearchCriteria();
 
     // --- イベントリスナーの設定 ---
@@ -41,21 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ui.setupEventListeners(
-        () => { // onWidenSearch
+        () => { /* onWidenSearch */
             const currentRangeIndex = searchFormElements.range.selectedIndex;
             if (currentRangeIndex < searchFormElements.range.options.length - 1) {
                 searchFormElements.range.selectedIndex = currentRangeIndex + 1;
                 handleSearch(1);
             }
         },
-        () => { // onClearFilters
+        () => { /* onClearFilters */
             searchFormElements.keyword.value = '';
             document.querySelectorAll('input[name="genre"]:checked').forEach(cb => cb.checked = false);
             document.querySelectorAll('input[name="special_category"]:checked').forEach(cb => cb.checked = false);
             searchFormElements.budget.value = '';
             handleSearch(1);
         },
-        (shopId) => { // onMapLinkClick
+        (shopId) => { /* onMapLinkClick */
             map.highlightMarker(shopId);
             ui.highlightListItem(shopId);
             document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
@@ -87,19 +88,25 @@ document.addEventListener('DOMContentLoaded', () => {
         map.setupMap(lat, lng);
         const radiusMeters = [300, 500, 1000, 2000, 3000][searchFormElements.range.value - 1];
         map.drawSearchRadius(lat, lng, radiusMeters);
-        
+
         const params = buildSearchParams(page);
 
         try {
             const data = await api.fetchRestaurants(params);
-            // ▼▼▼▼▼ このコールバック関数を修正 ▼▼▼▼▼
+            currentShops = data.shops; // 取得した店舗リストを保持
+
             const onPopupButtonClick = (shopId) => {
-                // ui.highlightListItemは、ハイライトとスクロールの両方を行います。
                 ui.highlightListItem(shopId);
-                // 不要なスクロール処理を削除しました。
             };
-            // ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲
-            map.renderMapData(data.shops, onPopupButtonClick);
+            const onRouteButtonClick = (shopId) => {
+                const shop = currentShops.find(s => s.id === shopId);
+                const currentLocation = { lat: latInput.value, lng: lngInput.value };
+                if (shop && currentLocation.lat) {
+                    map.drawRoute(shop, currentLocation);
+                }
+            };
+
+            map.renderMapData(data.shops, onPopupButtonClick, onRouteButtonClick);
             ui.renderShops(data.shops, searchFormElements);
             ui.renderPagination(data.pagination, handleSearch);
         } catch (error) {

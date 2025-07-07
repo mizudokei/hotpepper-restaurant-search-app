@@ -64,6 +64,25 @@ body {
     border-color: #007bff;
 }
 
+/* ▼▼▼▼▼ このブロックを新規追加 ▼▼▼▼▼ */
+.map-container {
+    position: relative;
+}
+
+#route-summary {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000; /* 地図より手前に表示 */
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    font-size: 0.9em;
+}
+/* ▲▲▲▲▲ ここまで追加 ▲▲▲▲▲ */
+
+
 #map {
     height: 400px;
     width: 100%;
@@ -115,7 +134,6 @@ body {
     overflow: hidden;
 }
 
-/* ▼▼▼▼▼ 「地図で確認」ボタンのスタイルを修正 ▼▼▼▼▼ */
 .map-link-btn {
     position: absolute;
     bottom: 10px;
@@ -126,16 +144,12 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    /* opacity: 0; を削除し、常に表示されるようにする */
     transition: background-color 0.2s;
 }
 
-/* ホバー時のスタイルを追加 */
 .map-link-btn:hover {
     background-color: #218838;
 }
-/* ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲ */
-
 
 .shop-card__image {
     width: 200px;
@@ -151,8 +165,7 @@ body {
 
 .shop-card__content {
     padding: 15px;
-    /* ボタンとテキストが重ならないように、右側に余白を確保 */
-    padding-right: 100px;
+    padding-right: 110px;
 }
 
 .shop-card__name {
@@ -262,7 +275,22 @@ body {
     margin-bottom: 5px;
 }
 .map-popup p { margin: 5px 0; }
-.map-popup .popup-list-btn, .map-popup .popup-detail-link {
+.map-popup .popup-buttons {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+.map-popup .popup-list-btn, .map-popup .popup-route-btn {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+}
+.map-popup .popup-list-btn { background-color: #007bff; }
+.map-popup .popup-route-btn { background-color: #17a2b8; }
+.map-popup .popup-detail-link {
     display: block;
     width: 100%;
     text-align: center;
@@ -270,14 +298,7 @@ body {
     margin-top: 5px;
     border-radius: 4px;
     text-decoration: none;
-}
-.map-popup .popup-list-btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-.map-popup .popup-detail-link {
     background-color: #6c757d;
     color: white;
 }
+
