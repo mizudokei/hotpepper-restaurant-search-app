@@ -1,304 +1,708 @@
+/* ==========================================================================
+	基本設定
+	- サイト全体の基本的なスタイルを定義します。
+   ========================================================================== */
 body {
-    font-family: sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    margin: 0;
-    padding: 20px;
+	margin: 0;
+	font-family: sans-serif;
+	color: #333;
+	background-color: #f4f4f4;
 }
 
 .container {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	width: 100%;
+	margin: 0 auto;
+	box-sizing: border-box;
+	/* paddingとborderを幅計算に含める */
 }
 
-#keyword {
-    padding: 8px;
-    margin-top: 10px;
-    width: calc(100% - 16px);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
 
-.genre-filter {
-    margin-top: 10px;
-}
-
-.genre-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.genre-options label {
-    cursor: pointer;
-}
-
-.map-view-controls {
-    display: flex;
-    gap: 5px;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-.map-view-btn {
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    background-color: #f8f8f8;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.map-view-btn:hover {
-    background-color: #e9e9e9;
-}
-
-.map-view-btn.active {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* ▼▼▼▼▼ このブロックを新規追加 ▼▼▼▼▼ */
-.map-container {
-    position: relative;
-}
-
-#route-summary {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 10px;
-    border-radius: 5px;
-    z-index: 1000; /* 地図より手前に表示 */
-    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-    font-size: 0.9em;
-}
-/* ▲▲▲▲▲ ここまで追加 ▲▲▲▲▲ */
-
-
-#map {
-    height: 400px;
-    width: 100%;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
-
+/* ==========================================================================
+	汎用・ユーティリティ (Utility)
+	- プロジェクト全体で再利用されるヘルパークラスなどを定義します。
+   ========================================================================== */
 .hidden {
-    display: none !important;
+	display: none !important;
 }
 
+/* --- ローディングスピナー --- */
 #loading-spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
+	width: 30px;
+	height: 30px;
+	margin: 50px auto;
+	border: 4px solid #f3f3f3;
+	border-top: 4px solid #E51109;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
+
+/* ==========================================================================
+	主要コンポーネント (Components)
+	- サイトを構成する各UIパーツのスタイルを定義します。
+   ========================================================================== */
+
+/* --- 検索キーワード入力フォーム --- */
+.search-input-wrapper {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: calc(100% - 32px);
+	margin: 16px auto;
+	border: none;
+}
+
+#keyword {
+	width: 100%;
+	padding: 12px 40px 12px 44px;
+	font-size: 16px;
+	border: none;
+	border-radius: 5px;
+	caret-color: #E51109;
+}
+
+#keyword:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+.search-icon {
+	position: absolute;
+	left: 12px;
+	width: 20px;
+	height: 20px;
+}
+
+.clear-keyword-btn {
+	position: absolute;
+	right: 12px;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	background: url("../icons/Clear.svg") no-repeat center center;
+	background-size: 20px;
+	cursor: pointer;
+}
+
+/* --- 絞り込みフィルター --- */
+.filter-grid {
+	position: relative;
+	z-index: 2000;	/* 地図コンポーネントより手前に表示 */
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	width: 90%;
+	margin: 0 auto 24px auto;
+	background-color: #fff;
+	border-radius: 5px;
+	box-shadow: 0 0 8px #0000004d;
+}
+
+.filter-trigger {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding: 12px;
+	font-size: 15px;
+	color: #555;
+	text-align: left;
+	background-color: #fff;
+	border: none;
+	cursor: pointer;
+}
+
+#filter-trigger-1 {
+	border-top-left-radius: 5px;
+	border-right: 1px solid #c5c5c5;
+	border-bottom: 1px solid #c5c5c5;
+}
+
+#filter-trigger-2 {
+	border-top-right-radius: 5px;
+	border-bottom: 1px solid #c5c5c5;
+}
+
+#filter-trigger-3 {
+	border-right: 1px solid #c5c5c5;
+	border-bottom: 1px solid #c5c5c5;
+}
+
+#filter-trigger-4 {
+	border-bottom: 1px solid #c5c5c5;
+}
+
+.filter-icon {
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+}
+
+/* 省略記号(...)付きテキスト */
+.filter-trigger span {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.action-buttons {
+	grid-column: 1 / span 2;	/* グリッドの全幅を使用 */
+	display: flex;
+	gap: 10px;
+	width: 100%;
+	margin: 18px 0;
+	padding: 0 18px;
+	box-sizing: border-box;
+}
+
+#clear-filters-btn {
+	width: 30%;
+	padding: 12px;
+	font-size: 16px;
+	background-color: #fff;
+	border: solid 0.9px #c5c5c5;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+#search-btn {
+	width: 70%;
+	padding: 12px;
+	font-size: 16px;
+	color: #fff;
+	background-color: #E51109;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+
+/* --- 地図 --- */
+.map-container {
+	position: relative;
+	margin-bottom: 20px;
+}
+
+#map {
+	width: 100%;
+	height: 380px;
+	margin-bottom: 20px;
+	border-radius: 5px;
+}
+
+/* 地図上の操作ボタン (現在地など) */
+.map-view-controls {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 5px;
+	background-color: #ffffffcc;
+	border-radius: 5px;
+	box-shadow: 0 1px 5px #000000a6;
+	backdrop-filter: blur(2px);
+}
+
+.map-view-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 4px;
+	background-color: #fff;
+	border: 1px solid #00000033;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.map-view-btn svg {
+	width: 20px;
+	height: 20px;
+	stroke: #333;
+	transition: stroke 0.2s;
+}
+
+.map-view-btn:hover {
+	background-color: #f0f0f0;
+}
+
+.map-view-btn.active {
+	background-color: #007bff;
+	border-color: #007bff;
+}
+
+.map-view-btn.active svg {
+	stroke: #fff;
+}
+
+/* 現在地マーカー */
+.current-location-marker .pulsating-circle {
+	position: relative;
+	width: 20px;
+	height: 20px;
+	background-color: #007bff;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.current-location-marker .pulsating-circle::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 100%;
+	height: 100%;
+	background-color: #007bff;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	animation: pulsate 2s ease-out infinite;
+	opacity: 0.7;
+	z-index: -1;	/* マーカー本体の下に配置 */
+}
+
+@keyframes pulsate {
+	0% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0.7;
+	}
+
+	100% {
+		transform: translate(-50%, -50%) scale(4);
+		opacity: 0;
+	}
+}
+
+/* ルート案内情報 */
+#route-summary {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 1000;
+	padding: 10px;
+	font-size: 0.9em;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 5px;
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+}
+
+/* 地図上のポップアップ */
+.map-popup .popup-img {
+	width: 100%;
+	height: auto;
+	margin-bottom: 5px;
+	border-radius: 4px;
+}
+
+.map-popup p {
+	margin: 5px 0;
+}
+
+.map-popup .popup-buttons {
+	display: flex;
+	gap: 5px;
+	margin-top: 5px;
+}
+
+.map-popup .popup-list-btn,
+.map-popup .popup-route-btn {
+	flex: 1;
+	padding: 5px;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.map-popup .popup-list-btn {
+	background-color: #E51109;
+}
+
+.map-popup .popup-route-btn {
+	background-color: #17a2b8;
+}
+
+.map-popup .popup-detail-link {
+	display: block;
+	width: 100%;
+	padding: 5px;
+	margin-top: 5px;
+	color: white;
+	text-align: center;
+	text-decoration: none;
+	background-color: #6c757d;
+	border-radius: 4px;
+}
+
+/* --- 検索結果表示エリア --- */
+.results-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 24px;
+	margin-bottom: 12px;
+	padding: 0 16px 12px 16px;
+	border-bottom: 1px solid #eee;
+}
+
+#results-count {
+	font-weight: bold;
+}
+
+.sort-wrapper select,
+#sort-order {
+	padding: 6px 8px;
+	font-size: 16px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	background-color: #fff;
+	outline: none;
+}
+
+/* 店舗カードのコンテナ */
+#search-results-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 1.5rem;
+}
+
+/* --- 店舗カード --- */
 .shop-card-wrapper {
-    position: relative;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+	display: flex;
+	flex-direction: column;	/* カード内の要素を縦に並べる */
+	background-color: #ffffff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.3s ease;
 }
 
+/* マップで選択された際にハイライト */
 .shop-card-wrapper.highlighted {
-    border-color: #007bff;
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+	border-color: #E51109;
+	box-shadow: 0 0 10px rgba(229, 17, 9, 0.5);
 }
 
 .shop-card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-}
-
-.shop-card {
-    display: flex;
-    overflow: hidden;
-}
-
-.map-link-btn {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    padding: 5px 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.map-link-btn:hover {
-    background-color: #218838;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	/* リンク領域をカード全体に広げる */
+	text-decoration: none;
+	color: inherit;
 }
 
 .shop-card__image {
-    width: 200px;
-    flex-shrink: 0;
+	width: 100%;
+	height: 200px;
 }
 
 .shop-card__image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .shop-card__content {
-    padding: 15px;
-    padding-right: 110px;
+	flex-grow: 1;
+	/* この要素が可変の高さを埋める */
+	padding: 1rem 1rem 0.5rem 1rem;
 }
 
 .shop-card__name {
-    margin: 0 0 10px 0;
-    font-size: 1.2em;
+	margin: 0 0 0.75rem 0;
+	font-size: 1.25rem;
+	font-weight: 600;
 }
 
 .shop-card__access {
-    margin: 0;
-    font-size: 0.9em;
-    color: #555;
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	color: #6c757d;
+}
+
+/* カードフッター (距離と地図ボタン) */
+.shop-card__footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: auto;	/* フッターをカード下部に固定 */
+	padding: 0.5rem 1rem 1rem 1rem;
 }
 
 .shop-card__distance {
-    font-weight: bold;
-    color: #d9534f;
-    margin-top: 10px;
+	margin: 0;
+	font-size: 0.9rem;
+	color: #d9534f;
+	font-weight: bold;
+	white-space: nowrap;
 }
 
+.map-link-btn {
+	padding: 0.5rem 1rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #E51109;
+	background-color: transparent;
+	border: 1px solid #E51109;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.map-link-btn:hover {
+	color: white;
+	background-color: #E51109;
+}
+
+
+/* --- ページネーション --- */
 .pagination {
-    margin-top: 20px;
-    text-align: center;
+	margin-top: 20px;
+	text-align: center;
 }
 
-.pagination button, .pagination span {
-    display: inline-block;
-    padding: 8px 16px;
-    margin: 0 4px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #007bff;
-    background-color: white;
-    cursor: pointer;
+.pagination button,
+.pagination span {
+	display: inline-block;
+	padding: 8px 16px;
+	margin: 0 4px;
+	color: #E51109;
+	background-color: white;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	text-decoration: none;
+	cursor: pointer;
 }
 
 .pagination button:hover {
-    background-color: #f2f2f2;
+	background-color: #f2f2f2;
 }
 
 .pagination .current {
-    background-color: #007bff;
-    color: white;
-    border: 1px solid #007bff;
-    cursor: default;
+	color: white;
+	background-color: #E51109;
+	border: 1px solid #E51109;
+	cursor: default;
 }
 
-.detail-image {
-    width: 100%;
-    max-width: 500px;
-    height: auto;
-    margin-bottom: 20px;
-    border-radius: 8px;
-}
-
-.detail-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.detail-table th, .detail-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.detail-table th {
-    background-color: #f2f2f2;
-    width: 100px;
-}
-
+/* --- 検索結果なし --- */
 .no-results {
-    text-align: center;
-    padding: 40px 20px;
-    border: 1px dashed #ccc;
-    border-radius: 8px;
-    margin-top: 20px;
+	padding: 40px 20px;
+	margin-top: 20px;
+	text-align: center;
+	border: 1px dashed #ccc;
+	border-radius: 8px;
 }
 
 .suggestion-actions {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 20px;
 }
 
 .suggestion-btn {
-    padding: 10px 15px;
-    border: 1px solid #007bff;
-    background-color: #fff;
-    color: #007bff;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+	padding: 10px 15px;
+	color: #E51109;
+	background-color: #fff;
+	border: 1px solid #E51109;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s, color 0.2s;
 }
 
 .suggestion-btn:hover {
-    background-color: #007bff;
-    color: #fff;
+	color: #fff;
+	background-color: #E51109;
 }
 
-.map-popup .popup-img {
-    width: 100%;
-    height: auto;
-    border-radius: 4px;
-    margin-bottom: 5px;
-}
-.map-popup p { margin: 5px 0; }
-.map-popup .popup-buttons {
-    display: flex;
-    gap: 5px;
-    margin-top: 5px;
-}
-.map-popup .popup-list-btn, .map-popup .popup-route-btn {
-    flex: 1;
-    padding: 5px;
-    border: none;
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-}
-.map-popup .popup-list-btn { background-color: #007bff; }
-.map-popup .popup-route-btn { background-color: #17a2b8; }
-.map-popup .popup-detail-link {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 5px;
-    margin-top: 5px;
-    border-radius: 4px;
-    text-decoration: none;
-    background-color: #6c757d;
-    color: white;
+
+/* --- モーダルウィンドウ --- */
+#modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	z-index: 2000;
 }
 
+.modal {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-height: 80vh;	/* 高さが画面の80%を超えないように */
+	padding: 16px;
+	background-color: #fff;
+	border-top-left-radius: 16px;
+	border-top-right-radius: 16px;
+	box-sizing: border-box;
+	z-index: 2001;	/* オーバーレイより手前 */
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.modal-header h3 {
+	margin: 0;
+}
+
+.modal-close-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	background: none;
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.modal-close-btn img {
+	width: 20px;
+	height: 20px;
+}
+
+.modal-content {
+	overflow-y: auto;	/* 内容が多い場合にスクロール */
+}
+
+/* ラジオボタン形式のリスト */
+.modal-options-list {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.modal-options-list li {
+	padding: 12px 8px;
+	border-bottom: 1px solid #eee;
+	cursor: pointer;
+}
+
+.modal-options-list li:hover {
+	background-color: #f8f9fa;
+}
+
+.modal-options-list li.selected {
+	font-weight: bold;
+	color: #E51109;
+}
+
+/* チェックボックス形式のリスト */
+.modal-checkbox-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.modal-checkbox-list label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.modal-checkbox-list input[type="checkbox"] {
+	appearance: none;
+	-webkit-appearance: none;
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	cursor: pointer;
+	position: relative;
+}
+
+.modal-checkbox-list input[type="checkbox"]:checked {
+	background-color: #E51109;
+	border-color: #E51109;
+}
+
+/* チェックマークの描画 */
+.modal-checkbox-list input[type="checkbox"]:checked::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 6px;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.modal-footer {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid #eee;
+}
+
+.modal-footer button {
+	width: 100%;
+	padding: 12px;
+	font-size: 16px;
+	font-weight: bold;
+	color: #fff;
+	background-color: #E51109;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+
+/* ==========================================================================
+	ページ固有のスタイル (Pages)
+   ========================================================================== */
+
+/* --- 店舗詳細ページ --- */
+.detail-image {
+	width: 100%;
+	max-width: 500px;
+	height: auto;
+	margin-bottom: 20px;
+	border-radius: 8px;
+}
+
+.detail-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.detail-table th,
+.detail-table td {
+	padding: 8px;
+	text-align: left;
+	border: 1px solid #ddd;
+}
+
+.detail-table th {
+	width: 100px;
+	background-color: #f2f2f2;
+}

@@ -4,101 +4,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>レストラン検索</title>
+    <title>検索画面</title>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
-    <h1>レストラン検索</h1>
-    <form id="search-form" onsubmit="return false;">
-        <div>
-            <label for="range">検索半径:</label>
-            <select name="range" id="range">
-                <option value="1">300m</option>
-                <option value="2">500m</option>
-                <option value="3" selected>1000m</option>
-                <option value="4">2000m</option>
-                <option value="5">3000m</option>
-            </select>
+
+    <main class="container">
+
+        <section class="search-controls">
+
+            <form id="search-form" onsubmit="return false;">
+                <div class="search-input-wrapper">
+                    <img src="{{ url_for('static', filename='icons/Search.svg') }}" alt="検索アイコン" class="search-icon">
+                    <input type="text" id="keyword" name="keyword" placeholder="キーワードで検索">
+                    <button type="button" id="clear-keyword-btn" class="clear-keyword-btn hidden" title="クリア"></button>
+                </div>
+            </form>
+
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-view-controls">
+                    <button id="view-mode-pins" class="map-view-btn active" title="ピン表示">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                    </button>
+                    <button id="view-mode-heatmap" class="map-view-btn" title="ヒートマップ表示">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="19" cy="7" r="1"></circle>
+                            <circle cx="5" cy="7" r="1"></circle>
+                            <circle cx="19" cy="17" r="1"></circle>
+                            <circle cx="5" cy="17" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+                <div id="route-summary" class="hidden"></div>
+            </div>
+
+            <div class="filter-grid">
+                <button type="button" class="filter-trigger" id="filter-trigger-1" data-modal-target="radius-modal">
+                    <img src="{{ url_for('static', filename='icons/MyLocation.svg') }}" alt="半径アイコン"
+                        class="filter-icon">
+                    <span id="radius-display" data-default-text="検索半径">検索半径</span>
+                </button>
+                <button type="button" class="filter-trigger" id="filter-trigger-2" data-modal-target="genre-modal">
+                    <img src="{{ url_for('static', filename='icons/Restaurant.svg') }}" alt="ジャンルアイコン"
+                        class="filter-icon">
+                    <span id="genre-display" data-default-text="ジャンル">ジャンル</span>
+                </button>
+                <button type="button" class="filter-trigger" id="filter-trigger-3" data-modal-target="budget-modal">
+                    <img src="{{ url_for('static', filename='icons/JapaneseYen.svg') }}" alt="予算アイコン"
+                        class="filter-icon">
+                    <span id="budget-display" data-default-text="予算">予算</span>
+                </button>
+                <button type="button" class="filter-trigger" id="filter-trigger-4"
+                    data-modal-target="special-category-modal">
+                    <img src="{{ url_for('static', filename='icons/Star.svg') }}" alt="こだわりアイコン" class="filter-icon">
+                    <span id="sc-display" data-default-text="こだわり条件">こだわり条件</span>
+                </button>
+                <div class="action-buttons">
+                    <button type="button" id="clear-filters-btn">クリア</button>
+                    <button type="button" id="search-btn">この条件で検索</button>
+                </div>
+            </div>
+
+            <input type="hidden" id="range" name="range" value="3"> <input type="hidden" id="budget" name="budget"
+                value=""> <input type="hidden" id="lat" name="lat"> <input type="hidden" id="lng" name="lng">
+        </section>
+        <section id="results-area">
+            <div id="loading-spinner" class="hidden"></div>
+
+            <div id="results-header" class="results-header hidden">
+                <p id="results-count"></p>
+                <div class="sort-wrapper">
+                    <select name="sort_by" id="sort-order">
+                        <option value="recommend" selected>おすすめ順</option>
+                        <option value="distance">距離の近い順</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="search-results-container"></div>
+
+            <div id="pagination-container"></div>
+        </section>
+    </main>
+
+
+    <div id="modal-overlay" class="hidden"></div>
+
+    <div id="radius-modal" class="modal hidden">
+        <div class="modal-header">
+            <h3>検索半径</h3>
+            <button class="modal-close-btn" title="閉じる"><img src="{{ url_for('static', filename='icons/Close.svg') }}"
+                    alt="閉じる"></button>
         </div>
-        <div>
-            <label for="keyword">キーワード:</label>
-            <input type="text" id="keyword" name="keyword" placeholder="例：ラーメン、個室">
+        <div class="modal-content">
+            <ul class="modal-options-list">
+                <li data-value="1" data-text="300m">300m</li>
+                <li data-value="2" data-text="500m">500m</li>
+                <li data-value="3" data-text="1000m">1000m</li>
+                <li data-value="4" data-text="2000m">2000m</li>
+                <li data-value="5" data-text="3000m">3000m</li>
+            </ul>
         </div>
-        <br>
-        <div class="genre-filter">
-            <label>ジャンル:</label>
-            <div class="genre-options">
+    </div>
+
+    <div id="genre-modal" class="modal hidden">
+        <div class="modal-header">
+            <h3>ジャンル</h3>
+            <button class="modal-close-btn" title="閉じる"><img src="{{ url_for('static', filename='icons/Close.svg') }}"
+                    alt="閉じる"></button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-checkbox-list">
                 {% for genre in genres %}
-                <label>
-                    <input type="checkbox" name="genre" value="{{ genre.code }}"> {{ genre.name }}
-                </label>
+                <label><input type="checkbox" name="genre" value="{{ genre.code }}"> {{ genre.name }}</label>
                 {% endfor %}
             </div>
         </div>
-        <br>
-        <div class="genre-filter">
-            <label>こだわり条件:</label>
-            <div class="genre-options">
+        <div class="modal-footer"><button class="modal-apply-btn">決定</button></div>
+    </div>
+
+    <div id="budget-modal" class="modal hidden">
+        <div class="modal-header">
+            <h3>予算</h3>
+            <button class="modal-close-btn" title="閉じる"><img src="{{ url_for('static', filename='icons/Close.svg') }}"
+                    alt="閉じる"></button>
+        </div>
+        <div class="modal-content">
+            <ul class="modal-options-list">
+                <li data-value="" data-text="指定なし">指定なし</li>
+                <li data-value="B001" data-text="～1500円">～1500円</li>
+                <li data-value="B002" data-text="1501～2000円">1501～2000円</li>
+                <li data-value="B003" data-text="2001～3000円">2001～3000円</li>
+                <li data-value="B008" data-text="3001～4000円">3001～4000円</li>
+                <li data-value="B004" data-text="4001～5000円">4001～5000円</li>
+                <li data-value="B005" data-text="5001～7000円">5001～7000円</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="special-category-modal" class="modal hidden">
+        <div class="modal-header">
+            <h3>こだわり条件</h3>
+            <button class="modal-close-btn" title="閉じる"><img src="{{ url_for('static', filename='icons/Close.svg') }}"
+                    alt="閉じる"></button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-checkbox-list">
                 {% for sc in special_categories %}
-                <label>
-                    <input type="checkbox" name="special_category" value="{{ sc.code }}"> {{ sc.name }}
-                </label>
+                <label><input type="checkbox" name="special_category" value="{{ sc.code }}"> {{ sc.name }}</label>
                 {% endfor %}
             </div>
         </div>
-        <br>
-        <div>
-            <label for="budget">予算:</label>
-            <select name="budget" id="budget">
-                <option value="">指定なし</option>
-                <option value="B001">～1500円</option>
-                <option value="B002">1501～2000円</option>
-                <option value="B003">2001～3000円</option>
-                <option value="B008">3001～4000円</option>
-                <option value="B004">4001～5000円</option>
-                <option value="B005">5001～7000円</option>
-            </select>
-        </div>
-        <br>
-        <div>
-            <label for="sort-order">並び順:</label>
-            <select name="sort_by" id="sort-order">
-                <option value="4" selected>おすすめ順</option>
-                <option value="distance">距離の近い順</option>
-            </select>
-        </div>
-        <br>
-        <button type="button" id="search-btn">現在地で検索</button>
-        <input type="hidden" name="lat" id="lat">
-        <input type="hidden" name="lng" id="lng">
-    </form>
-
-    <div class="map-view-controls">
-        <button id="view-mode-pins" class="map-view-btn active">ピン表示</button>
-        <button id="view-mode-heatmap" class="map-view-btn">ヒートマップ表示</button>
+        <div class="modal-footer"><button class="modal-apply-btn">決定</button></div>
     </div>
 
-    <div class="map-container">
-        <div id="map"></div>
-        <div id="route-summary" class="hidden"></div>
-    </div>
-
-    <div id="loading-spinner" class="hidden"></div>
-
-    <div id="search-results-container"></div>
-
-    <div id="pagination-container"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

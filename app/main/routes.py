@@ -18,7 +18,7 @@ def get_all_genres():
     API通信に失敗した場合は、エラーメッセージをコンソールに出力し、
     空のリストを返すことで、アプリケーション全体のクラッシュを防ぐ。
 
-    returns:
+    Returns:
         list: ジャンル情報の辞書が格納されたリスト。例: [{'code': 'G001', 'name': '居酒屋'}, ...]   失敗した場合は空のリスト。
     """
     try:
@@ -38,7 +38,7 @@ def get_all_special_categories():
     """
     ホットペッパーのこだわりマスターAPIを呼び出し、こだわり条件一覧を取得。
 
-    returns:
+    Returns:
         list: こだわり条件情報の辞書が格納されたリスト。失敗した場合は空のリスト。
     """
     try:
@@ -75,10 +75,10 @@ def shop_detail(shop_id):
     """
     指定された店舗ID（shop_id）に基づいて、店舗の詳細ページをレンダリング。
 
-    args:
+    Args:
         shop_id (str): URLから受け取った店舗の一意なID。
 
-    returns:
+    Returns:
         response: レンダリングされたHTMLページ。店舗が見つからない場合はその旨を表示。
     """
     try:
